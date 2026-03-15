@@ -56,6 +56,14 @@ LLMsApp solves these challenges by:
 - ✅ Generation cancellation support
 - ✅ Error handling and user feedback
 
+### Vector Database & RAG
+- ✅ Import PDF and text documents
+- ✅ Automatic text chunking and embedding generation
+- ✅ Vector similarity search for document chunks
+- ✅ RAG (Retrieval-Augmented Generation) chat per document
+- ✅ Document library with navigation to individual chats
+- ✅ Source attribution showing which chunks were used
+
 ### Configuration Options
 - **Model Parameters**:
   - Batch size (16-256)
@@ -305,13 +313,26 @@ init(engine: LLMEngine) {
 LLMsApp/
 ├── LLMsApp/
 │   ├── ContentView.swift           # Root view (shows MainTabView)
-│   ├── MainTabView.swift           # Tab navigation (Chat/Settings)
+│   ├── MainTabView.swift           # Tab navigation (Chat/Documents/Settings)
 │   ├── ChatView.swift              # Main chat interface
 │   ├── SettingsView.swift          # Configuration UI
 │   ├── ModelAdapterViewModel.swift # Core ViewModel + LLMEngine protocol
 │   ├── ModelSettings.swift         # Observable settings store
 │   ├── LLMsAppApp.swift           # App entry point
 │   ├── Assets.xcassets/           # Images and colors
+│   ├── VectorDatabase/            # Vector DB & RAG implementation
+│   │   ├── Models/
+│   │   │   └── DocumentModel.swift        # Document and chunk data models
+│   │   ├── Services/
+│   │   │   ├── VectorDatabaseManager.swift # Document storage and search
+│   │   │   ├── PDFProcessor.swift          # PDF text extraction and chunking
+│   │   │   └── EmbeddingGenerator.swift    # Vector embedding generation
+│   │   ├── ViewModels/
+│   │   │   ├── DocumentLibraryViewModel.swift # Document list management
+│   │   │   └── DocumentChatViewModel.swift    # RAG chat implementation
+│   │   └── Views/
+│   │       ├── DocumentLibraryView.swift   # Document list UI
+│   │       └── DocumentChatView.swift      # Document chat UI
 │   └── Models_llms/               # Local model storage (not in git)
 │       └── *.gguf                 # GGUF model files
 ├── LLMsApp.xcodeproj/             # Xcode project
@@ -477,6 +498,25 @@ open LLMsApp.xcodeproj
 1. Tap **Unload** button in Chat tab
 2. This frees memory for loading a different model
 3. Useful when switching between models
+
+### Using Vector Database (RAG)
+
+1. **Import Documents**:
+   - Go to **Documents** tab
+   - Tap **Import PDF** or **Import Text**
+   - Select files from your device
+   - App extracts text, creates chunks, and generates embeddings
+
+2. **Chat with Documents**:
+   - Tap any document in the library
+   - Ask questions about the document content
+   - App searches relevant chunks and provides context-aware answers
+   - See source attribution showing which chunks were used
+
+3. **Document Management**:
+   - Swipe to delete documents
+   - View chunk count and import date
+   - Navigate between different document chats
 
 ---
 
