@@ -54,7 +54,7 @@ public final class ModelAdapterViewModel: ObservableObject {
     @Published public private(set) var progressDescription: String? = nil
 
     // MARK: - Dependencies
-    private let engine: LLMEngine
+    internal let engine: LLMEngine
 
     // Keep track of a simple task so we can cancel/observe it
     private var generationTask: Task<Void, Never>? = nil
@@ -96,48 +96,40 @@ public final class ModelAdapterViewModel: ObservableObject {
     // MARK: - Generation
     /// Start generating for the provided prompt. Tokens are appended to `generatedText` and published.
     /// If a generation is already in progress it will be cancelled first.
-    // swift
     @MainActor
     public func generate(prompt: String) {
-        // If already loading or generating, skip
-        guard !isLoading && !isGenerating else { return }
+        guard !isLoading else { return }
 
-        // Cancel any previous generation and reset state
+        // Cancel existing generation if any
         cancelGeneration()
+
         lastError = nil
         generatedText = ""
         isGenerating = true
 
-        // Create and store the generation task
-        let task = Task { [weak self] in
+        generationTask = Task { [weak self] in
             guard let self = self else { return }
 
             do {
-                try await self.engine.generate(prompt: prompt, tokenHandler: { token in
-                    // Schedule UI update on the main actor
+                try await self.engine.generate(prompt: prompt) { token in
                     Task { @MainActor [weak self] in
                         guard let self = self else { return }
                         self.generatedText.append(token)
                     }
-                    // Continue unless this Task was cancelled
                     return !Task.isCancelled
-                })
+                }
             } catch {
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    self.lastError = error
+                await MainActor.run { [weak self] in
+                    self?.lastError = error
                 }
             }
 
-            // Finalize state on the main actor
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
                 self.isGenerating = false
                 self.generationTask = nil
             }
         }
-
-        self.generationTask = task
     }
 
     /// Cancel any in-progress generation.
@@ -145,23 +137,33 @@ public final class ModelAdapterViewModel: ObservableObject {
     public func cancelGeneration() {
         generationTask?.cancel()
         generationTask = nil
-        // Instruct the engine to cancel as well; it's safe to call from main actor.
         engine.cancelGeneration()
         isGenerating = false
     }
 
     // MARK: - Convenience helpers
     public var canGenerate: Bool {
-        return !isLoading && !isGenerating
+        !isLoading && !isGenerating
     }
+
     // MARK: - Convenience loading from bundle
     @MainActor
-    public func loadModelFromBundle(named modelName: String) async {
+    public func loadModelFromBundle(named modelNameOrFile: String) async {
         lastError = nil
-        guard let modelUrl = Bundle.main.url(forResource: modelName, withExtension: "gguf") else {
-            lastError = ModelAdapterError.engineError("Model '\(modelName)' not found in bundle")
+
+        let ext = "gguf"
+        let resourceName: String
+        if modelNameOrFile.lowercased().hasSuffix(".\(ext)") {
+            resourceName = String(modelNameOrFile.dropLast(ext.count + 1))
+        } else {
+            resourceName = modelNameOrFile
+        }
+
+        guard let modelUrl = Bundle.main.url(forResource: resourceName, withExtension: ext) else {
+            lastError = ModelAdapterError.engineError("Model '\(modelNameOrFile)' not found in bundle")
             return
         }
+
         await loadModel(at: modelUrl.path)
     }
 }

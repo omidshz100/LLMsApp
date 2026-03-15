@@ -10,6 +10,7 @@ import SwiftUI
 struct MainTabView: View {
     @StateObject private var settings = ModelSettings()
     @StateObject private var viewModel: ModelAdapterViewModel
+    @StateObject private var databaseManager = VectorDatabaseManager()
     
     init() {
         let settings = ModelSettings()
@@ -26,6 +27,13 @@ struct MainTabView: View {
             }
             .tabItem {
                 Label("Chat", systemImage: "message.fill")
+            }
+            
+            NavigationView {
+                DocumentLibraryView(databaseManager: databaseManager, llmViewModel: viewModel)
+            }
+            .tabItem {
+                Label("Documents", systemImage: "folder.fill")
             }
             
             NavigationView {

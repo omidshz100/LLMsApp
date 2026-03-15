@@ -9,11 +9,13 @@
 /* Begin PBXBuildFile section */
 		D9D3B4342F65AEDA007AD813 /* SwiftLlama in Frameworks */ = {isa = PBXBuildFile; productRef = D9D3B4332F65AEDA007AD813 /* SwiftLlama */; };
 		D9D3B47E2F672D29007AD813 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = D9D3B47D2F672D29007AD813 /* .gitignore */; };
+		D9D3B4802F6730C7007AD813 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D9D3B47F2F6730C7007AD813 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		D9D3B40D2F658441007AD813 /* LLMsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LLMsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9D3B47D2F672D29007AD813 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		D9D3B47F2F6730C7007AD813 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -39,6 +41,7 @@
 		D9D3B4042F658441007AD813 = {
 			isa = PBXGroup;
 			children = (
+				D9D3B47F2F6730C7007AD813 /* README.md */,
 				D9D3B47D2F672D29007AD813 /* .gitignore */,
 				D9D3B40F2F658441007AD813 /* LLMsApp */,
 				D9D3B40E2F658441007AD813 /* Products */,
@@ -122,6 +125,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D9D3B47E2F672D29007AD813 /* .gitignore in Resources */,
+				D9D3B4802F6730C7007AD813 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
