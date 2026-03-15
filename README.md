@@ -638,8 +638,7 @@ public enum ModelAdapterError: Error, LocalizedError {
 
 ## Contact
 
-[Add your contact information]
-
+My email: omidshz100@gmail.com
 ---
 
 **Built with ❤️ using Swift and SwiftUI**
