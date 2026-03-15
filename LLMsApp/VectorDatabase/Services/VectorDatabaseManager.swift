@@ -42,62 +42,93 @@ class VectorDatabaseManager: ObservableObject {
     
     /// Import a PDF file and create document with embeddings
     func importPDF(url: URL) async throws -> DocumentModel {
-        // Extract text from PDF
-        let text = try PDFProcessor.extractText(from: url)
-        
-        // Chunk the text
-        let textChunks = PDFProcessor.chunkText(text, chunkSize: 500, overlap: 50)
-        
-        // Generate embeddings for each chunk
-        let embeddings = try await embeddingGenerator.generateEmbeddings(for: textChunks)
-        
-        // Create document chunks
-        let chunks = zip(textChunks, embeddings).enumerated().map { index, pair in
-            DocumentChunk(
-                text: pair.0,
-                embedding: pair.1,
-                chunkIndex: index
+        do {
+            // Extract text from PDF
+            let text = try PDFProcessor.extractText(from: url)
+            
+            // Chunk the text
+            let textChunks = PDFProcessor.chunkText(text, chunkSize: 500, overlap: 50)
+            
+            // Generate embeddings for each chunk
+            let embeddings = try await embeddingGenerator.generateEmbeddings(for: textChunks)
+            
+            // Create document chunks
+            let chunks = zip(textChunks, embeddings).enumerated().map { index, pair in
+                DocumentChunk(
+                    text: pair.0,
+                    embedding: pair.1,
+                    chunkIndex: index
+                )
+            }
+            
+            // Create document
+            let document = DocumentModel(
+                fileName: url.lastPathComponent,
+                fileType: .pdf,
+                chunks: chunks
             )
+            
+            // Clean up temporary file if it's in temp directory
+            cleanupTemporaryFile(url: url)
+            
+            return document
+            
+        } catch {
+            // Clean up temporary file on error
+            cleanupTemporaryFile(url: url)
+            throw VectorDatabaseError.importFailed("PDF processing failed: \(error.localizedDescription)")
         }
-        
-        // Create document
-        let document = DocumentModel(
-            fileName: url.lastPathComponent,
-            fileType: .pdf,
-            chunks: chunks
-        )
-        
-        return document
     }
     
     /// Import a text file and create document with embeddings
     func importTextFile(url: URL) async throws -> DocumentModel {
-        // Extract text from file
-        let text = try PDFProcessor.extractTextFromFile(url: url)
-        
-        // Chunk the text
-        let textChunks = PDFProcessor.chunkText(text, chunkSize: 500, overlap: 50)
-        
-        // Generate embeddings for each chunk
-        let embeddings = try await embeddingGenerator.generateEmbeddings(for: textChunks)
-        
-        // Create document chunks
-        let chunks = zip(textChunks, embeddings).enumerated().map { index, pair in
-            DocumentChunk(
-                text: pair.0,
-                embedding: pair.1,
-                chunkIndex: index
+        do {
+            // Extract text from file
+            let text = try PDFProcessor.extractTextFromFile(url: url)
+            
+            // Chunk the text
+            let textChunks = PDFProcessor.chunkText(text, chunkSize: 500, overlap: 50)
+            
+            // Generate embeddings for each chunk
+            let embeddings = try await embeddingGenerator.generateEmbeddings(for: textChunks)
+            
+            // Create document chunks
+            let chunks = zip(textChunks, embeddings).enumerated().map { index, pair in
+                DocumentChunk(
+                    text: pair.0,
+                    embedding: pair.1,
+                    chunkIndex: index
+                )
+            }
+            
+            // Create document
+            let document = DocumentModel(
+                fileName: url.lastPathComponent,
+                fileType: .text,
+                chunks: chunks
             )
+            
+            // Clean up temporary file if it's in temp directory
+            cleanupTemporaryFile(url: url)
+            
+            return document
+            
+        } catch {
+            // Clean up temporary file on error
+            cleanupTemporaryFile(url: url)
+            throw VectorDatabaseError.importFailed("Text file processing failed: \(error.localizedDescription)")
         }
-        
-        // Create document
-        let document = DocumentModel(
-            fileName: url.lastPathComponent,
-            fileType: .text,
-            chunks: chunks
-        )
-        
-        return document
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Clean up temporary files after processing
+    private func cleanupTemporaryFile(url: URL) {
+        // Only clean up files in the temporary directory
+        let tempDirectory = FileManager.default.temporaryDirectory
+        if url.path.hasPrefix(tempDirectory.path) {
+            try? FileManager.default.removeItem(at: url)
+        }
     }
     
     // MARK: - Vector Search

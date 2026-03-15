@@ -58,20 +58,61 @@ class PDFProcessor {
     
     /// Extract text from a plain text file
     static func extractTextFromFile(url: URL) throws -> String {
-        return try String(contentsOf: url, encoding: .utf8)
+        do {
+            // Check if file exists and is readable
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw PDFProcessorError.fileNotFound
+            }
+            
+            // Try to read with UTF-8 encoding first
+            if let content = try? String(contentsOf: url, encoding: .utf8) {
+                guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw PDFProcessorError.noTextFound
+                }
+                return content
+            }
+            
+            // Fallback to other encodings
+            let encodings: [String.Encoding] = [.utf16, .ascii, .isoLatin1]
+            
+            for encoding in encodings {
+                if let content = try? String(contentsOf: url, encoding: encoding) {
+                    guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        continue
+                    }
+                    return content
+                }
+            }
+            
+            throw PDFProcessorError.unreadableFile
+            
+        } catch let error as PDFProcessorError {
+            throw error
+        } catch {
+            throw PDFProcessorError.fileAccessDenied
+        }
     }
 }
 
 enum PDFProcessorError: Error, LocalizedError {
     case failedToLoadPDF
     case noTextFound
+    case fileNotFound
+    case fileAccessDenied
+    case unreadableFile
     
     var errorDescription: String? {
         switch self {
         case .failedToLoadPDF:
             return "Failed to load PDF file"
         case .noTextFound:
-            return "No text content found in PDF"
+            return "No text content found in file"
+        case .fileNotFound:
+            return "File not found"
+        case .fileAccessDenied:
+            return "Permission denied. Please try selecting the file again."
+        case .unreadableFile:
+            return "Unable to read file content. The file may be corrupted or in an unsupported format."
         }
     }
 }

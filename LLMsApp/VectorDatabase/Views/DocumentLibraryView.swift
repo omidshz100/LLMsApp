@@ -46,7 +46,7 @@ struct DocumentLibraryView: View {
             }
         }
         .sheet(isPresented: $showingTextPicker) {
-            DocumentPicker(contentTypes: [.plainText, .text]) { url in
+            DocumentPicker(contentTypes: [.plainText, .text, .utf8PlainText, .delimitedText]) { url in
                 Task {
                     await viewModel.importTextFile(url: url)
                 }
@@ -202,11 +202,40 @@ struct DocumentPicker: UIViewControllerRepresentable {
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
             
-            // Get access to security-scoped resource
-            guard url.startAccessingSecurityScopedResource() else { return }
+            // Start accessing security-scoped resource
+            guard url.startAccessingSecurityScopedResource() else {
+                print("Failed to access security-scoped resource")
+                return
+            }
+            
             defer { url.stopAccessingSecurityScopedResource() }
             
-            onPick(url)
+            do {
+                // Copy file to app's temporary directory to avoid permission issues
+                let tempDirectory = FileManager.default.temporaryDirectory
+                let fileName = url.lastPathComponent
+                let tempURL = tempDirectory.appendingPathComponent(fileName)
+                
+                // Remove existing file if it exists
+                if FileManager.default.fileExists(atPath: tempURL.path) {
+                    try FileManager.default.removeItem(at: tempURL)
+                }
+                
+                // Copy the file to temp directory
+                try FileManager.default.copyItem(at: url, to: tempURL)
+                
+                // Pass the temp URL to the handler
+                onPick(tempURL)
+                
+            } catch {
+                print("Error copying file: \(error.localizedDescription)")
+                // Fallback: try to use original URL
+                onPick(url)
+            }
+        }
+        
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            // Handle cancellation if needed
         }
     }
 }
