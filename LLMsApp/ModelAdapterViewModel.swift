@@ -146,6 +146,12 @@ public final class ModelAdapterViewModel: ObservableObject {
         !isLoading && !isGenerating
     }
 
+    public var isModelLoaded: Bool {
+        // You may need to adjust this logic depending on your engine implementation
+        // For example, check if engine has a loaded model
+        return lastError == nil && !isLoading
+    }
+
     // MARK: - Convenience loading from bundle
     @MainActor
     public func loadModelFromBundle(named modelNameOrFile: String) async {

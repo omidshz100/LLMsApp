@@ -12,7 +12,7 @@ import Combine
 class VectorDatabaseManager: ObservableObject {
     @Published private(set) var documents: [DocumentModel] = []
     
-    private let embeddingGenerator = EmbeddingGenerator()
+     let embeddingGenerator = EmbeddingGenerator()
     private let userDefaultsKey = "stored_documents"
     
     init() {

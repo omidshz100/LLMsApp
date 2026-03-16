@@ -7,15 +7,18 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
-
+import Combine
 struct DocumentLibraryView: View {
     @StateObject private var viewModel: DocumentLibraryViewModel
     @ObservedObject var llmViewModel: ModelAdapterViewModel
     
     @State private var showingPDFPicker = false
     @State private var showingTextPicker = false
+    @State private var showingModelPicker = false
+    @State private var embeddingModelLoaded = false
+    @State private var embeddingModelName: String = ""
     
-    private let databaseManager: VectorDatabaseManager
+    public let databaseManager: VectorDatabaseManager
     
     init(databaseManager: VectorDatabaseManager, llmViewModel: ModelAdapterViewModel) {
         self.databaseManager = databaseManager
@@ -25,11 +28,11 @@ struct DocumentLibraryView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            // Embedding Model Loader
+            embeddingModelLoaderSection
             // Import Buttons
             importButtonsSection
-            
             Divider()
-            
             // Documents List
             if viewModel.documents.isEmpty {
                 emptyStateView
@@ -38,20 +41,93 @@ struct DocumentLibraryView: View {
             }
         }
         .navigationTitle("Documents")
+        .sheet(isPresented: $showingModelPicker) {
+            DocumentPicker(contentTypes: [.data]) { url in
+                Task {
+                    // Try to load embedding model
+                    do {
+                        try await viewModel.databaseManager.embeddingGenerator.loadEmbeddingModel(modelUrl: url)
+                        embeddingModelLoaded = true
+                        embeddingModelName = url.lastPathComponent
+                    } catch {
+                        embeddingModelLoaded = false
+                        embeddingModelName = ""
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $showingPDFPicker) {
             DocumentPicker(contentTypes: [.pdf]) { url in
                 Task {
-                    await viewModel.importPDF(url: url)
+                    if embeddingModelLoaded {
+                        await viewModel.importPDF(url: url)
+                    }
                 }
             }
         }
         .sheet(isPresented: $showingTextPicker) {
             DocumentPicker(contentTypes: [.plainText, .text, .utf8PlainText, .delimitedText]) { url in
                 Task {
-                    await viewModel.importTextFile(url: url)
+                    if embeddingModelLoaded {
+                        await viewModel.importTextFile(url: url)
+                    }
                 }
             }
         }
+    }
+    
+    // MARK: - Embedding Model Loader
+    
+    private func loadEmbeddingModelFromBundle() async {
+        let modelName = "gemma-3-4b-it-Q4_K_S" // without .gguf extension
+        let ext = "gguf"
+        if let modelUrl = Bundle.main.url(forResource: modelName, withExtension: ext) {
+            do {
+                try await viewModel.databaseManager.embeddingGenerator.loadEmbeddingModel(modelUrl: modelUrl)
+                embeddingModelLoaded = true
+                embeddingModelName = modelUrl.lastPathComponent
+            } catch {
+                embeddingModelLoaded = false
+                embeddingModelName = ""
+            }
+        } else {
+            embeddingModelLoaded = false
+            embeddingModelName = ""
+        }
+    }
+    
+    private var embeddingModelLoaderSection: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Button(action: {
+                    Task { await loadEmbeddingModelFromBundle() }
+                }) {
+                    Label("Load Embedding Model from Bundle", systemImage: "cube.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .foregroundColor(.blue)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                if embeddingModelLoaded {
+                    Text("Loaded: \(embeddingModelName)")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                } else {
+                    Text("No embedding model loaded")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            if !embeddingModelLoaded {
+                Text("Please load an embedding model (GGUF) before importing documents.")
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(UIColor.systemGroupedBackground))
     }
     
     // MARK: - Import Section
@@ -64,14 +140,14 @@ struct DocumentLibraryView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(viewModel.isImporting)
+                .disabled(viewModel.isImporting || !embeddingModelLoaded)
                 
                 Button(action: { showingTextPicker = true }) {
                     Label("Import Text", systemImage: "doc.text.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(viewModel.isImporting)
+                .disabled(viewModel.isImporting || !embeddingModelLoaded)
             }
             
             if viewModel.isImporting {

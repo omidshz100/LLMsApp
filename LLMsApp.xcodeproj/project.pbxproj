@@ -10,6 +10,7 @@
 		D9D3B4342F65AEDA007AD813 /* SwiftLlama in Frameworks */ = {isa = PBXBuildFile; productRef = D9D3B4332F65AEDA007AD813 /* SwiftLlama */; };
 		D9D3B47E2F672D29007AD813 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = D9D3B47D2F672D29007AD813 /* .gitignore */; };
 		D9D3B4802F6730C7007AD813 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D9D3B47F2F6730C7007AD813 /* README.md */; };
+		D9D3B4982F676D2C007AD813 /* ObjectBox-Sync.xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = D9D3B4972F676D2C007AD813 /* ObjectBox-Sync.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D9D3B4342F65AEDA007AD813 /* SwiftLlama in Frameworks */,
+				D9D3B4982F676D2C007AD813 /* ObjectBox-Sync.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 			name = LLMsApp;
 			packageProductDependencies = (
 				D9D3B4332F65AEDA007AD813 /* SwiftLlama */,
+				D9D3B4972F676D2C007AD813 /* ObjectBox-Sync.xcframework */,
 			);
 			productName = LLMsApp;
 			productReference = D9D3B40D2F658441007AD813 /* LLMsApp.app */;
@@ -108,6 +111,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D9D3B4322F65AEDA007AD813 /* XCRemoteSwiftPackageReference "swift-llama-cpp" */,
+				D9D3B4962F676D2C007AD813 /* XCRemoteSwiftPackageReference "objectbox-swift-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D9D3B40E2F658441007AD813 /* Products */;
@@ -359,6 +363,14 @@
 				minimumVersion = 1.2.0;
 			};
 		};
+		D9D3B4962F676D2C007AD813 /* XCRemoteSwiftPackageReference "objectbox-swift-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/objectbox/objectbox-swift-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -366,6 +378,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D9D3B4322F65AEDA007AD813 /* XCRemoteSwiftPackageReference "swift-llama-cpp" */;
 			productName = SwiftLlama;
+		};
+		D9D3B4972F676D2C007AD813 /* ObjectBox-Sync.xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9D3B4962F676D2C007AD813 /* XCRemoteSwiftPackageReference "objectbox-swift-spm" */;
+			productName = "ObjectBox-Sync.xcframework";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -16,7 +16,7 @@ class DocumentLibraryViewModel: ObservableObject {
     @Published var importProgress: String = ""
     @Published var lastError: Error?
     
-    private let databaseManager: VectorDatabaseManager
+    public let databaseManager: VectorDatabaseManager
     
     init(databaseManager: VectorDatabaseManager) {
         self.databaseManager = databaseManager

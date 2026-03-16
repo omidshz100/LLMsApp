@@ -14,9 +14,11 @@ struct DocumentChatView: View {
     @Environment(\.dismiss) private var dismiss
     
     let document: DocumentModel
+    @ObservedObject var llmViewModel: ModelAdapterViewModel
     
     init(document: DocumentModel, databaseManager: VectorDatabaseManager, llmViewModel: ModelAdapterViewModel) {
         self.document = document
+        self.llmViewModel = llmViewModel
         _viewModel = StateObject(wrappedValue: DocumentChatViewModel(
             document: document,
             databaseManager: databaseManager,
@@ -77,11 +79,18 @@ struct DocumentChatView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 4)
             }
+            if !llmViewModel.isModelLoaded {
+                Text("LLM model is not loaded. Please load a model in the Chat tab before chatting with documents.")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal)
+                    .padding(.vertical, 4)
+            }
             
             Divider()
             
             // Input Area
-            chatInputArea
+            chatInputArea.disabled(!llmViewModel.isModelLoaded)
         }
         .navigationTitle(document.fileName)
         .navigationBarTitleDisplayMode(.inline)
